@@ -1,19 +1,17 @@
 import mongoose from "mongoose";
-import dbConnect from "@/lib/dbConnect";
+import dbConnect from '@/lib/dbConnect';
 import bcrypt from "bcrypt";
-import { NextRequest, NextResponse } from "next/server";
 import UserModel from "@/model/User";
 import { sendVerificationEmail } from "@/helpers/sendVerificationEmail";
 
-export async function POST(request: NextRequest) {
-  await dbConnect();
+export async function POST(request: Request) {
+  await dbConnect()
   try {
     const { username, email, password } = await request.json();
     const existingVerifiedUserByUsername = await UserModel.findOne({
       username,
       isVerified: true,
     });
-
     if (existingVerifiedUserByUsername) {
       return Response.json(
         {
@@ -23,7 +21,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
+ 
     const existingUserByEmail = await UserModel.findOne({ email });
     const verificationCode = Math.floor(
       100000 + Math.random() * 90000
@@ -77,7 +75,7 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
-    }
+    } 
 
     return Response.json(
       {
@@ -88,7 +86,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.log(error);
-    return NextResponse.json(
+    return Response.json(
       {
         success: false,
         message: "Error while signup",
