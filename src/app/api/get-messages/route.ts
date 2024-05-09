@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     return Response.json(
       {
         success: false,
-        message: "Failedfetch all messages",
+        message: "Failed fetch all messages",
       },
       { status: 500 }
     );
