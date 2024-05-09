@@ -5,7 +5,7 @@ import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
 
 export async function POST(request: Request) {
-  dbConnect();
+  await dbConnect();
 
   const session = await getServerSession(authOptions);
   const user: User = session?.user as User;
@@ -20,7 +20,6 @@ export async function POST(request: Request) {
     );
   }
   const userId = user._id;
-  await request.json();
   const { acceptMessages } = await request.json();
   try {
     const updatedUser = await UserModel.findByIdAndUpdate(
@@ -31,24 +30,23 @@ export async function POST(request: Request) {
       { new: true }
     );
 
-    if(!updatedUser){
-        return Response.json(
-            {
-              success: false,
-              message: "User not found",
-            },
-            { status: 401 }
-          );
-    }
-
-    return Response.json(
+    if (!updatedUser) {
+      return Response.json(
         {
-          success: true,
-          message: "Accept message status updated successfully",
+          success: false,
+          message: "User not found",
         },
         { status: 401 }
       );
+    }
 
+    return Response.json(
+      {
+        success: true,
+        message: "Accept message status updated successfully",
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.log(error);
     return Response.json(
@@ -61,6 +59,48 @@ export async function POST(request: Request) {
   }
 }
 
+export async function GET(request: Request) {
+  await dbConnect();
+  try {
+    const session = await getServerSession(authOptions);
+    const user: User = session?.user as User;
 
+    if (!session || !session.user) {
+      return Response.json(
+        {
+          success: false,
+          message: "Not Authenticated",
+        },
+        { status: 401 }
+      );
+    }
+    const userId = user._id;
 
+    const foundUser = await UserModel.findById(userId);
+    if (!foundUser) {
+      return Response.json(
+        {
+          success: false,
+          message: "Failed to find user",
+        },
+        { status: 401 }
+      );
+    }
 
+    return Response.json(
+      {
+        success: true,
+        isAcceptingMessage: foundUser.isAcceptingMessage,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    return Response.json(
+      {
+        success: false,
+        message: "Not Authenticated",
+      },
+      { status: 401 }
+    );
+  }
+}
