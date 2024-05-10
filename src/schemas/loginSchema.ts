@@ -2,7 +2,7 @@ import { z } from "zod";
 
 
 export const loginSchema = z.object({
-    indentifier:z.string(),
+    identifier:z.string(),
     password:z.string(),
 })
 
