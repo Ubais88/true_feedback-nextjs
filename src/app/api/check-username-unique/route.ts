@@ -1,7 +1,7 @@
-import UserModel from "@/model/User";
 import dbConnect from "@/lib/dbConnect";
-import { z } from "zod";
+import UserModel from "@/model/User";
 import { usernameValidation } from "@/schemas/signupSchema";
+import { z } from "zod";
 
 const UsernameQuerySchema = z.object({
   username: usernameValidation,
@@ -9,58 +9,59 @@ const UsernameQuerySchema = z.object({
 
 export async function GET(request: Request) {
   await dbConnect();
+
   try {
     const { searchParams } = new URL(request.url);
     const queryParams = {
       username: searchParams.get("username"),
     };
-    console.log("queryParams : ", queryParams)
-    // validate by zod
+
     const result = UsernameQuerySchema.safeParse(queryParams);
-    console.log("username checking : ", result);
 
     if (!result.success) {
-      const usernameError = result.error.format().username?._errors || [];
-
+      const usernameErrors = result.error.format().username?._errors || [];
       return Response.json(
         {
           success: false,
-          messsage: usernameError.length
-            ? usernameError.join(", ")
-            : "Invalid Username",
+          message:
+            usernameErrors?.length > 0
+              ? usernameErrors.join(", ")
+              : "Invalid query parameters",
         },
         { status: 400 }
       );
     }
+
     const { username } = result.data;
-    const existingUser = await UserModel.findOne({
+
+    const existingVerifiedUser = await UserModel.findOne({
       username,
       isVerified: true,
     });
-    if (existingUser) {
+
+    if (existingVerifiedUser) {
       return Response.json(
         {
           success: false,
-          messsage: "Username already exists",
+          message: "Username is already taken",
         },
-        { status: 400 }
+        { status: 200 }
       );
     }
+
     return Response.json(
       {
         success: true,
-        messsage: "Username is available to use",
+        message: "Username is unique",
       },
       { status: 200 }
     );
-
-
   } catch (error) {
-    console.log("error during username checking: ", error);
+    console.error("Error checking username:", error);
     return Response.json(
       {
         success: false,
-        message: "error during username checking",
+        message: "Error checking username",
       },
       { status: 500 }
     );
